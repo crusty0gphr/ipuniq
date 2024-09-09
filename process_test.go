@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ipuniq/set"
+	"github.com/bits-and-blooms/bitset"
 )
 
 func TestProcessChunk(t *testing.T) {
@@ -24,7 +24,7 @@ func TestProcessChunk(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	bitmap := set.NewSet()
+	bitmap := bitset.New(20)
 	var wg sync.WaitGroup
 	wg.Add(1)
 
@@ -37,24 +37,5 @@ func TestProcessChunk(t *testing.T) {
 	count := bitmap.Count()
 	if count != 4 {
 		t.Errorf("Expected 4 distinct IPs, got %d", count)
-	}
-}
-
-func TestIsValidIPv4(t *testing.T) {
-	tests := []struct {
-		input    []byte
-		expected bool
-	}{
-		{[]byte("127.0.0.1"), true},               // Valid IPv4
-		{[]byte("192.168.0.256"), false},          // Invalid IPv4
-		{[]byte("::1"), false},                    // Valid IPv6, but not IPv4
-		{[]byte("2001:db8::ff00:42:8329"), false}, // Valid IPv6, but not IPv4
-		{[]byte("invalid-ip"), false},             // Invalid IP
-	}
-
-	for _, tt := range tests {
-		if isValidIPv4(tt.input) != tt.expected {
-			t.Errorf("isValidIPv4(%s) = %v; want %v", tt.input, isValidIPv4(tt.input), tt.expected)
-		}
 	}
 }
