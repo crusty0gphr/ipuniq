@@ -50,7 +50,6 @@ func processLinesInChunk(file *os.File, startOffset, endOffset int64, set *Bitwi
 		if isValidIP {
 			// Convert 16-bytes IP address to 4-bytes uint32
 			set.Add(ipv4ToUint(ip))
-			_ = ipv4ToUint(ip)
 		} else {
 			// log.Printf("Worker %d: Invalid IPv4 address: %s\n", id, string(line))
 			// TODO: add an invalid IP collector
