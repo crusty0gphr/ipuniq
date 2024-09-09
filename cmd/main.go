@@ -27,7 +27,6 @@ func main() {
 	startTime := time.Now()
 	ipuniq.LogMemoryUsage("before function")
 
-	// bitset := roaring.New()
 	bitSet := bitset.New(1 << 32)
 	file, fileSize, err := ipuniq.OpenFile(*filePath)
 	if err != nil {
@@ -38,12 +37,12 @@ func main() {
 	chunks := ipuniq.SplitFileIntoChunks(file, fileSize, numWorkers)
 
 	var wg sync.WaitGroup
-
 	for i, chunk := range chunks {
 		wg.Add(1)
 		go func(i int, chunk ipuniq.ChunkMeta) {
-			if err = ipuniq.ProcessChunk(i, *filePath, chunk.StartOffset, chunk.EndOffset, bitSet, &wg); err != nil {
-				log.Printf("Error processing chunk %d: %v", i, err)
+			errProc := ipuniq.ProcessChunk(i, *filePath, chunk.StartOffset, chunk.EndOffset, bitSet, &wg)
+			if errProc != nil {
+				log.Printf("Error processing chunk %d: %v", i, errProc)
 			}
 		}(i, chunk)
 	}

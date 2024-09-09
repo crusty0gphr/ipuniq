@@ -28,11 +28,7 @@ func ProcessChunk(id int, path string, startOffset, endOffset int64, set *bitset
 		return fmt.Errorf("worker %d: unable to seek to startOffset: %v", id, err)
 	}
 
-	if err = processLinesInChunk(file, startOffset, endOffset, set, id); err != nil {
-		return err
-	}
-
-	return nil
+	return processLinesInChunk(file, startOffset, endOffset, set, id)
 }
 
 // processLinesInChunk reads lines from the file (withing the offsets) and processes them
