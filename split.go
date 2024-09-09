@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// ChunkMeta defines the start and end offsets for a file chunk
 type ChunkMeta struct {
 	StartOffset int64
 	EndOffset   int64
@@ -26,6 +27,8 @@ func OpenFile(path string) (*os.File, int64, error) {
 	return file, fileInfo.Size(), nil
 }
 
+// SplitFileIntoChunks divides the file into equal-sized chunks for concurrent processing
+// Each chunk ends at a newline boundary to ensure no lines are split between chunks
 func SplitFileIntoChunks(file *os.File, fileSize int64, numWorkers int) []ChunkMeta {
 	chunkSize := fileSize / int64(numWorkers)
 	var chunks []ChunkMeta
@@ -34,6 +37,7 @@ func SplitFileIntoChunks(file *os.File, fileSize int64, numWorkers int) []ChunkM
 	for i := 0; i < numWorkers; i++ {
 		endOffset := startOffset + chunkSize
 
+		// Adjust to the next newline, exclude the last line
 		if i != numWorkers-1 {
 			adjustment, err := AdjustToNextNewline(file, endOffset)
 			if err != nil {
@@ -46,12 +50,15 @@ func SplitFileIntoChunks(file *os.File, fileSize int64, numWorkers int) []ChunkM
 
 		chunks = append(chunks, ChunkMeta{startOffset, endOffset})
 
+		// Move startOffset
 		startOffset = endOffset
 	}
 
 	return chunks
 }
 
+// AdjustToNextNewline moves the offset to the start of the next line to ensure a chunk ends at a newline
+// This avoids splitting lines between chunks
 func AdjustToNextNewline(file *os.File, offset int64) (int64, error) {
 	_, err := file.Seek(offset, 0)
 	if err != nil {
