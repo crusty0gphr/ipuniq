@@ -4,6 +4,8 @@ import (
 	"os"
 	"sync"
 	"testing"
+
+	"github.com/ipuniq/set"
 )
 
 func TestProcessChunk(t *testing.T) {
@@ -22,7 +24,7 @@ func TestProcessChunk(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	bitmap := NewSet()
+	bitmap := set.NewSet()
 	var wg sync.WaitGroup
 	wg.Add(1)
 

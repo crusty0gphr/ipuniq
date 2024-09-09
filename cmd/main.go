@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bits-and-blooms/bitset"
+
 	"github.com/ipuniq"
 )
 
@@ -25,7 +27,7 @@ func main() {
 	startTime := time.Now()
 	ipuniq.LogMemoryUsage("before function")
 
-	bset := ipuniq.NewBitwiseSet(1 << 32)
+	bitSet := bitset.New(1 << 32)
 	file, fileSize, err := ipuniq.OpenFile(*filePath)
 	if err != nil {
 		log.Fatalf("Error opening file: %v", err)
@@ -35,12 +37,12 @@ func main() {
 	chunks := ipuniq.SplitFileIntoChunks(file, fileSize, numWorkers)
 
 	var wg sync.WaitGroup
-
 	for i, chunk := range chunks {
 		wg.Add(1)
 		go func(i int, chunk ipuniq.ChunkMeta) {
-			if err = ipuniq.ProcessChunk(i, *filePath, chunk.StartOffset, chunk.EndOffset, bset, &wg); err != nil {
-				log.Printf("Error processing chunk %d: %v", i, err)
+			errProc := ipuniq.ProcessChunk(i, *filePath, chunk.StartOffset, chunk.EndOffset, bitSet, &wg)
+			if errProc != nil {
+				log.Printf("Error processing chunk %d: %v", i, errProc)
 			}
 		}(i, chunk)
 	}
@@ -48,7 +50,7 @@ func main() {
 
 	ipuniq.LogMemoryUsage("after function")
 	log.Printf("Finished execution: %v", time.Since(startTime))
-	log.Printf("Distinct IPs count: %v", bset.Count())
+	log.Printf("Distinct IPs count: %v", bitSet.Count())
 }
 
 func startProfiling() {

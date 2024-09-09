@@ -7,12 +7,14 @@ import (
 	"net"
 	"os"
 	"sync"
+
+	"github.com/bits-and-blooms/bitset"
 )
 
 const bufferSize = 2 * 1024 * 1024 // 2 MB buffer
 
 // ProcessChunk handles processing of a file chunk. Reads lines of the chunk withing the offsets
-func ProcessChunk(id int, path string, startOffset, endOffset int64, set *BitwiseSet, wg *sync.WaitGroup) error {
+func ProcessChunk(id int, path string, startOffset, endOffset int64, set *bitset.BitSet, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
 	file, err := os.Open(path)
@@ -26,16 +28,11 @@ func ProcessChunk(id int, path string, startOffset, endOffset int64, set *Bitwis
 		return fmt.Errorf("worker %d: unable to seek to startOffset: %v", id, err)
 	}
 
-	if err = processLinesInChunk(file, startOffset, endOffset, set, id); err != nil {
-		return err
-	}
-
-	return nil
+	return processLinesInChunk(file, startOffset, endOffset, set, id)
 }
 
 // processLinesInChunk reads lines from the file (withing the offsets) and processes them
-// Checks for a valid IPv4 address and adds valid lines to the Set
-func processLinesInChunk(file *os.File, startOffset, endOffset int64, set *BitwiseSet, id int) error {
+func processLinesInChunk(file *os.File, startOffset, endOffset int64, set *bitset.BitSet, id int) error {
 	scanner := bufio.NewScanner(file)
 	scanner.Buffer(make([]byte, bufferSize), bufferSize)
 
@@ -49,7 +46,7 @@ func processLinesInChunk(file *os.File, startOffset, endOffset int64, set *Bitwi
 		isValidIP := ip != nil && ip.To4() != nil
 		if isValidIP {
 			// Convert 16-bytes IP address to 4-bytes uint32
-			set.Add(ipv4ToUint(ip))
+			set.Set(uint(ipv4ToUint(ip)))
 		} else {
 			// log.Printf("Worker %d: Invalid IPv4 address: %s\n", id, string(line))
 			// TODO: add an invalid IP collector

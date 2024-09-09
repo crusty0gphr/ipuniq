@@ -1,4 +1,4 @@
-package ipuniq
+package set
 
 import (
 	"sync"
